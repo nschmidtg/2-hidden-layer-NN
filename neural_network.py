@@ -4,28 +4,23 @@ import pickle
 import pandas as pd
 
 class NNetwork:
-    def __init__(self, n_input, n_hidden_layers, hidden_layer_size, n_cat):
+    def __init__(self, n_input, hidden_layer_size, n_cat):
         self.n_input = n_input
-        self.n_hidden_layers = n_hidden_layers
+        self.n_hidden_layers = 2
         self.hidden_layer_size = hidden_layer_size
         self.n_cat = n_cat
         
         # initialize weights
-        
         self.w_1 = np.random.randn(self.hidden_layer_size, self.n_input) / np.sqrt(self.n_input)
         self.w_2 = np.random.randn(self.hidden_layer_size, self.hidden_layer_size) / np.sqrt(self.hidden_layer_size)
         self.w_3 = np.random.randn(self.n_cat, self.hidden_layer_size) / np.sqrt(self.hidden_layer_size)
-        
-#         self.w_1 = np.zeros((self.hidden_layer_size, self.n_input))
-#         self.w_2 = np.zeros((self.hidden_layer_size, self.hidden_layer_size))
-#         self.w_3 = np.zeros((self.n_cat, self.hidden_layer_size))
 
         # initialize biases
         self.b_1 = np.zeros((self.hidden_layer_size, 1))
         self.b_2 = np.zeros((self.hidden_layer_size, 1))
         self.b_3 = np.zeros((self.n_cat, 1))
         
-    def train(self, trainset_i, n_epochs, batch_size, alpha, n_samples):
+    def train(self, trainset_i, n_epochs, alpha, n_samples):
         """
         train a fully connected neural network using the specified train_set (dataframe)
         """
@@ -34,15 +29,10 @@ class NNetwork:
 
         i = 0
         cost = np.zeros(n_epochs)
-        
-        subset = trainset_i.sample(n_samples)
 
-        while i < n_epochs:
-            # X_train.sample(X_train, n_samples)
-            # batches = [X_train[k:k + batch_size] for k in range(0, X_train.shape[0], batch_size)]
-            # t = tqdm(batches)
-            # for x, batch in enumerate(t):
-            for index, element in subset.iterrows():
+        while i < n_epochs:            
+            subset = trainset_i.sample(n_samples)
+            for index, element in trainset_i.iterrows():
                 
                 X_train = element[:-1]
                 Y_train = element[self.n_input]
