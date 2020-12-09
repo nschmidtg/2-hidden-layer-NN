@@ -41,13 +41,11 @@ class NNetwork:
                 element = X_train.values.reshape((dim1[0], 1))
              
                 z_1 = self.w_1.dot(element) + self.b_1    # input weight
-                z_1[z_1<=0] = 0                      # pass through ReLU non-linearity
-                a_1 = z_1
+                a_1 = self.__relu(z_1)                   # pass through ReLU non-linearity
 
-                # pass trough the hidden layers 1
+                # pass trough the hidden layer 1
                 z_2 = self.w_2.dot(a_1) + self.b_2
-                z_2[z_2<=0] = 0
-                a_2 = z_2                  
+                a_2 = self.__relu(z_2)               
 
                 # pass though the hidden layer 2
                 z_3 = self.w_3.dot(a_2) + self.b_3
@@ -56,10 +54,11 @@ class NNetwork:
                 # Loss
                 Yh = a_3
                 
+                
                 loss = self.__squared_loss(Yh, Y_train)
                 cost[i] += loss
                
-                
+                # derivative of the loss function w.r.t. output a_3
                 dLoss_Yh = Yh - Y_train
 
                 dLoss_z3 = dLoss_Yh * self.__dev_sigmoid(z_3)
@@ -67,32 +66,19 @@ class NNetwork:
                 dLoss_w3 = 1./a_2.shape[0] * np.dot(dLoss_z3, a_2.T)
                 dLoss_b3 = 1./a_2.shape[0] * np.dot(dLoss_z3, np.ones([dLoss_z3.shape[1],1]))
                 
-#                 print("dLoss_b3",dLoss_b3.shape)
-#                 print("dLoss_w3",dLoss_w3.shape)
-#                 print("a_2.shape",a_2)
-#                 print("dLoss_z3",dLoss_z3)
-                
                 # 2nd layer
                 dLoss_z2 = dLoss_a2 * self.__relu_derivative(z_2)        
-                dLoss_a1 = np.dot(self.w_2.T,dLoss_z2)
+                dLoss_a1 = np.dot(self.w_2.T, dLoss_z2)
                 dLoss_w2 = 1./a_1.shape[1] * np.dot(dLoss_z2, a_1.T)
                 dLoss_b2 = 1./a_1.shape[1] * np.dot(dLoss_z2, np.ones([dLoss_z2.shape[1],1]))
-                
-#                 print("1./a_1.shape[1]",(1./a_1.shape[0]))
-#                 print("dLoss_w2",dLoss_w2)
-                
                 
                 # 1st layer
                 dLoss_z1 = dLoss_a1 * self.__relu_derivative(z_1)        
                 dLoss_a0 = np.dot(self.w_1.T,dLoss_z1)
                 dLoss_w1 = 1./element.shape[1] * np.dot(dLoss_z1, element.T)
                 dLoss_b1 = 1./element.shape[1] * np.dot(dLoss_z1, np.ones([dLoss_z1.shape[1],1]))
-                
-#                 print("dLoss_b1",dLoss_b1.shape)
-#                 print("dLoss_w1",dLoss_w1.shape)
-                
-                # Update the weight and biases
 
+                # Update the weight and biases
                 self.w_1 = self.w_1 - dLoss_w1 * alpha
                 self.b_1 = self.b_1 - dLoss_b1 * alpha
                 self.w_2 = self.w_2 - dLoss_w2 * alpha
@@ -101,7 +87,6 @@ class NNetwork:
                 self.b_3 = self.b_3 - dLoss_b3 * alpha
                 
                 params = [self.w_1, self.b_1, self.w_2, self.b_2, self.w_3, self.b_3]
-                # print("params",params[3:4])
 
             i += 1
         to_save = [params, cost/float(n_samples)]
@@ -119,12 +104,12 @@ class NNetwork:
         fc = element.values.reshape((60, 1)) # flatten pooled layer
 
         z1 = w1.dot(fc) + b1 # first dense layer
-        z1[z1<=0] = 0 # pass through ReLU non-linearity
+        a1 = self.__relu(z1) # pass through ReLU non-linearity
 
-        z2 = w2.dot(z1) + b2 # first dense layer
-        z2[z2<=0] = 0 # pass through ReLU non-linearity
+        z2 = w2.dot(a1) + b2 # first dense layer
+        a2 = self.__relu(z2) # pass through ReLU non-linearity
 
-        out = w3.dot(z2) + b3 # second dense layer
+        out = w3.dot(a2) + b3 # second dense layer
         probs = self.__sigmoid(out) # predict class probabilities with the softmax activation function
 
         return (np.argmax(probs), np.max(probs))
@@ -132,12 +117,15 @@ class NNetwork:
     #### private methods
     
     def __squared_loss(self, probs, labels):
-        return np.sum((probs - labels)**2)
+        return np.sum((probs - labels)**2)*0.5
     
     def __relu_derivative(self, x):
         x[x<=0] = 0
         x[x>0] = 1
         return x
+    
+    def __relu(self, X):
+        return np.maximum(0,X)
 
     def __sigmoid(self, Z):
         return 1/(1+np.exp(-Z))
