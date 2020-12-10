@@ -103,14 +103,14 @@ class NNetwork:
         element = element[:-1]
         fc = element.values.reshape((60, 1)) # flatten pooled layer
 
-        z1 = w1.dot(fc) + b1 # first dense layer
+        z1 = w1.dot(fc) + b1 # input layer
         a1 = self.__relu(z1) # pass through ReLU non-linearity
 
-        z2 = w2.dot(a1) + b2 # first dense layer
+        z2 = w2.dot(a1) + b2 # first hidden dense layer
         a2 = self.__relu(z2) # pass through ReLU non-linearity
 
-        out = w3.dot(a2) + b3 # second dense layer
-        probs = self.__sigmoid(out) # predict class probabilities with the softmax activation function
+        out = w3.dot(a2) + b3 # second hidden dense layer
+        probs = self.__sigmoid(out) # predict class probabilities with the __sigmoid activation function
 
         return (np.argmax(probs), np.max(probs))
     
